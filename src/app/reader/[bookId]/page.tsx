@@ -1,16 +1,25 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
-export default function Reader({ params }: { params: { bookId: string } }) {
+import { useEffect, useRef, useState } from "react";
+import type {
+  PDFDocumentProxy,
+  PDFPageProxy,
+} from "pdfjs-dist/types/src/display/api";
+
+interface ReaderPageProps {
+  params: { bookId: string };          // ⬅️ matches Next.js PageProps
+}
+
+export default function Reader({ params }: ReaderPageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     (async () => {
-      const { getDocument, GlobalWorkerOptions, version } = await import("pdfjs-dist");
-      GlobalWorkerOptions.workerSrc =
-        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+      const { getDocument, GlobalWorkerOptions, version } = await import(
+        "pdfjs-dist"
+      );
+      GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
 
       const url = `/api/download?bookId=${params.bookId}&uid=DEMO`;
       const loadingTask = getDocument(url);
@@ -29,9 +38,19 @@ export default function Reader({ params }: { params: { bookId: string } }) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <div className="mb-3 flex items-center justify-between">
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} className="rounded border px-3 py-1">Prev</button>
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          className="rounded border px-3 py-1"
+        >
+          Prev
+        </button>
         <span>Page {page}</span>
-        <button onClick={() => setPage(p => p + 1)} className="rounded border px-3 py-1">Next</button>
+        <button
+          onClick={() => setPage((p) => p + 1)}
+          className="rounded border px-3 py-1"
+        >
+          Next
+        </button>
       </div>
       <canvas ref={canvasRef} className="rounded-lg shadow-lg" />
     </div>
