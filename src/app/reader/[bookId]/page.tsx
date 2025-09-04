@@ -9,7 +9,8 @@ export default function Reader({ params }: { params: { bookId: string } }) {
   useEffect(() => {
     (async () => {
       const { getDocument, GlobalWorkerOptions, version } = await import("pdfjs-dist");
-      GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+      GlobalWorkerOptions.workerSrc =
+        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
 
       const url = `/api/download?bookId=${params.bookId}&uid=DEMO`;
       const loadingTask = getDocument(url);

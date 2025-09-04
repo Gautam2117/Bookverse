@@ -39,7 +39,7 @@ importers:
         specifier: ^1.17.1
         version: 1.17.1
       pdfjs-dist:
-        specifier: ^3.11.174
+        specifier: ^3
         version: 3.11.174
       razorpay:
         specifier: ^2.9.6
