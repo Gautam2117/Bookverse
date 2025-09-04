@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import BookCard, { Book } from "@/components/BookCard";
+import Link from "next/link";
 
 const mock: Book[] = [
   { id:"1", slug:"starlight-hostel", title:"Starlight Hostel", author:"A. Sharma", cover:"/covers/starlight.jpg", priceINR:0, isPremium:false, tags:["magical","9–12"] },
@@ -18,7 +19,9 @@ export default function Home() {
             <h1 className="mt-3 text-4xl md:text-6xl font-bold leading-tight">Stories that feel like <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-300 to-fuchsia-300">home</span>.</h1>
             <p className="mt-4 text-slate-300 max-w-xl">Read and own gorgeously crafted ebooks. Free picks for everyone, premium editions for collectors.</p>
             <div className="mt-6 flex gap-3">
-              <a href="/books" className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold hover:bg-violet-500">Browse books</a>
+              <Link href="/books" className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold hover:bg-violet-500">
+                Browse books
+              </Link>
               <a href="#featured" className="rounded-xl border border-white/10 px-5 py-2.5 hover:bg-white/5">Featured</a>
             </div>
           </div>

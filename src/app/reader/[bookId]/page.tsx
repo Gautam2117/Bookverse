@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-// Use legacy build for better bundler compatibility
-import * as pdfjsLib from "pdfjs-dist";
-import { GlobalWorkerOptions } from "pdfjs-dist";
+import { getDocument, GlobalWorkerOptions, version } from "pdfjs-dist";
+import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist/types/src/display/api";
 
-GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${(pdfjsLib as any).version}/pdf.worker.min.js`;
+// Use CDN worker to avoid bundling worker files
+GlobalWorkerOptions.workerSrc =
+  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
 
 export default function Reader({ params }: { params: { bookId: string } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -12,14 +13,17 @@ export default function Reader({ params }: { params: { bookId: string } }) {
 
   useEffect(() => {
     (async () => {
-      const url = `/api/download?bookId=${params.bookId}&uid=DEMO`; // replace with real uid
-      const pdf = await (pdfjsLib as any).getDocument(url).promise;
-      const p = await pdf.getPage(page);
+      const url = `/api/download?bookId=${params.bookId}&uid=DEMO`; // TODO: replace with real uid/session
+      const loadingTask = getDocument(url);
+      const pdf: PDFDocumentProxy = await loadingTask.promise;
+      const p: PDFPageProxy = await pdf.getPage(page);
+
       const viewport = p.getViewport({ scale: 1.4 });
       const canvas = canvasRef.current!;
       const ctx = canvas.getContext("2d")!;
       canvas.height = viewport.height;
       canvas.width = viewport.width;
+
       await p.render({ canvasContext: ctx, viewport }).promise;
     })();
   }, [page, params.bookId]);
