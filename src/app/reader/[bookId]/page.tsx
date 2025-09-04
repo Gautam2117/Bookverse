@@ -1,16 +1,15 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import type {
   PDFDocumentProxy,
   PDFPageProxy,
 } from "pdfjs-dist/types/src/display/api";
 
-interface ReaderPageProps {
-  params: { bookId: string };          // ⬅️ matches Next.js PageProps
-}
-
-export default function Reader({ params }: ReaderPageProps) {
+export default function Reader({
+  params,
+}: {
+  params: { bookId: string };   // ← inline type only
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [page, setPage] = useState(1);
 
@@ -22,8 +21,7 @@ export default function Reader({ params }: ReaderPageProps) {
       GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
 
       const url = `/api/download?bookId=${params.bookId}&uid=DEMO`;
-      const loadingTask = getDocument(url);
-      const pdf: PDFDocumentProxy = await loadingTask.promise;
+      const pdf: PDFDocumentProxy = await getDocument(url).promise;
 
       const p: PDFPageProxy = await pdf.getPage(page);
       const viewport = p.getViewport({ scale: 1.4 });
