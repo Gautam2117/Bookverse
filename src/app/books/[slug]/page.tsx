@@ -30,10 +30,20 @@ export default async function BookDetail({ params }) {
         <p className="mt-5 text-slate-300 leading-relaxed">{book.description}</p>
         <div className="mt-6 flex items-center gap-4">
           <span className="text-2xl font-bold">{book.isPremium ? `₹${book.priceINR}` : "Free"}</span>
-          <Link href="/#" className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold hover:bg-violet-500">
-            {book.isPremium ? "Buy now" : "Get"}
+
+          {/* Free → read now; Premium → (placeholder) checkout route */}
+          <Link
+            href={book.isPremium ? `/checkout/${book.slug}` : `/reader/${book.slug}`}
+            className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold hover:bg-violet-500"
+          >
+            {book.isPremium ? "Buy now" : "Read now"}
           </Link>
-          <Link href={`/reader/${book.slug}`} className="rounded-xl border border-white/10 px-5 py-2.5 hover:bg-white/5">
+
+          {/* Always allow a preview */}
+          <Link
+            href={`/reader/${book.slug}`}
+            className="rounded-xl border border-white/10 px-5 py-2.5 hover:bg-white/5"
+          >
             Preview
           </Link>
         </div>
