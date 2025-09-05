@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",          // >= ES2015 fixes #private errors
+    "module": "commonjs",
+    "esModuleInterop": true,     // lets you write  import fg from "fast-glob"
+    "skipLibCheck": true         // ignore type errors in node_modules
+  },
+  "include": ["scripts/**/*.ts"]
+}

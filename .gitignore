@@ -41,3 +41,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local seed files (large)
+seed/books/**
+seed/covers/**
+
+# build artifacts / local compiles
+dist/**
+*.log
