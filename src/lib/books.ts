@@ -1,6 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
 
-const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!; // e.g. bookverse-xxxx.appspot.com
+const BUCKET = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!; // e.g. bookverse-6355d.appspot.com
 
 export type BookDoc = {
   id: string;
@@ -15,9 +15,9 @@ export type BookDoc = {
   description?: string;
 };
 
-export function storagePublicUrl(path: string) {
-  // for publicly readable files like covers/**
-  const object = encodeURIComponent(path);
+export function storagePublicUrl(objectPath: string) {
+  // objectPath like "covers/starlight-hostel.png"
+  const object = encodeURIComponent(objectPath);
   return `https://firebasestorage.googleapis.com/v0/b/${BUCKET}/o/${object}?alt=media`;
 }
 
