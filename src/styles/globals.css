@@ -13,3 +13,14 @@ html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
    from { background-position: 0 0; }
    to   { background-position: 10000px 5000px; }
  }
+
+ /* Starfield animation */
+@keyframes starfield-pan {
+  from { background-position: 0 0; }
+  to   { background-position: 800px 400px; }
+}
+.animate-starfield {
+  animation: starfield-pan 60s linear infinite;
+  background-size: 512px 512px; /* match SVG tile size */
+  background-repeat: repeat;
+}
