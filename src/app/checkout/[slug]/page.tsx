@@ -1,4 +1,9 @@
-/*  Checkout page – /checkout/[slug] */
+/*  Checkout page – /checkout/[slug]
+    Server component (no "use client")
+    - Next 15 streams dynamic route params → await them
+    - cookies() is async → await it
+    - Avoid caching so auth/cookies are read fresh
+*/
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -8,49 +13,64 @@ import { storagePublicUrl } from '@/utils/storage'
 
 export const metadata = { title: 'Checkout │ BookVerse' }
 
-/** Next 15 streams the `params` object – await it before use */
-export default async function CheckoutPage(
-  { params }: { params: Promise<{ slug: string }> },
-) {
+/** Ensure this page always runs on the server and is never cached */
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+type Props = { params: Promise<{ slug: string }> }
+
+export default async function CheckoutPage({ params }: Props) {
   // 0) unwrap streamed params
   const { slug } = await params
 
-  // 1) read cookies (cookies() is async)
+  // 1) read cookies (cookies() is async in Next 15)
   const store = await cookies()
-  const uidCookie = store.get('__session_uid')?.value
-  const idToken   = store.get('__session')?.value // optional ID-token cookie
+  const uidCookie = store.get('__session_uid')?.value ?? null
+  const idToken   = store.get('__session')?.value ?? null // Firebase ID token (optional)
 
-  // optional: verify ID token if uid cookie is missing
-  let uid = uidCookie ?? null
+  // 2) derive uid (prefer explicit uid cookie; fall back to verifying ID token)
+  let uid: string | null = uidCookie
   if (!uid && idToken) {
     try {
-      uid = (await adminAuth.verifyIdToken(idToken)).uid
+      // checkRevoked=false → fewer failures if token is old but valid
+      const decoded = await adminAuth.verifyIdToken(idToken, false)
+      uid = decoded.uid
     } catch {
-      /* ignore invalid/expired token */
+      // invalid/expired token → treat as signed-out
+      uid = null
     }
   }
 
-  // 2) not signed-in → bounce to /auth, preserving “next”
-  if (!uid) redirect(`/auth?next=/checkout/${slug}`)
+  // 3) not signed-in → bounce to /auth, preserving “next”
+  if (!uid) {
+    redirect(`/auth?next=/checkout/${encodeURIComponent(slug)}`)
+  }
 
-  // 3) fetch book by slug
-  const q = await adminDb.collection('books').where('slug', '==', slug).limit(1).get()
+  // 4) fetch book by slug
+  const q = await adminDb
+    .collection('books')
+    .where('slug', '==', slug)
+    .limit(1)
+    .get()
+
   if (q.empty) redirect('/404')
 
   const snap = q.docs[0]
-  const raw = snap.data() as any
+  const raw  = snap.data() as any
 
-  // 4) free books never hit the paid checkout
-  if (!raw.isPremium) redirect(`/books/${slug}`)
+  // 5) free books never hit the paid checkout (send to reader)
+  if (!raw.isPremium) {
+    redirect(`/reader/${slug}`)
+  }
 
-  // 5) shape data for the client shell
+  // 6) shape data for the client shell (plain JSON only)
   const book = {
-    id: snap.id,
-    slug: raw.slug,
-    title: raw.title,
-    author: raw.author,
-    price: Math.max(1, Math.round(raw.priceINR)), // ₹
-    cover: raw.coverPath ? storagePublicUrl(raw.coverPath) : '/placeholder-cover.jpg',
+    id:     snap.id,
+    slug:   raw.slug as string,
+    title:  raw.title as string,
+    author: raw.author as string,
+    price:  Math.max(1, Math.round(Number(raw.priceINR) || 0)), // ₹
+    cover:  raw.coverPath ? storagePublicUrl(raw.coverPath) : '/placeholder-cover.jpg',
   }
 
   return <CheckoutShell book={book} uid={uid} />
