@@ -48,4 +48,5 @@ seed/covers/**
 
 # build artifacts / local compiles
 dist/**
-*.log
+*.log"serviceAccount.json" 
+serviceAccount.json
