@@ -1,66 +1,44 @@
-// src/app/reader/[slug]/page.tsx
-// @ts-nocheck
-"use client";
+// src/app/reader/[slug]/page.tsx        (🚫 no "use client")
+import { Metadata } from 'next'
+import { getBookBySlug } from '@/lib/books.server'
+import { storagePublicUrl } from '@/utils/storage'
+import ReaderShell from './ReaderShell'             // ⬅ client component
 
-import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
-import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist/types/src/display/api";
+export const revalidate = 60
 
-export default function Reader() {
-  const { slug } = useParams<{ slug: string }>();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState<number | null>(null);
+interface ReaderPageProps {
+  params: { slug: string }
+}
 
-  useEffect(() => {
-    let cancelled = false;
+/** SEO */
+export async function generateMetadata(
+  { params }: ReaderPageProps,
+): Promise<Metadata> {
+  const book = await getBookBySlug(params.slug)
+  return {
+    title: book ? `${book.title} – Read | BookVerse` : 'Read | BookVerse',
+    description: book
+      ? `Dive into “${book.title}” by ${book.author}.`
+      : 'Read a book on BookVerse',
+  }
+}
 
-    (async () => {
-      const { getDocument, GlobalWorkerOptions, version } = await import("pdfjs-dist");
-      GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
-
-      const url = `/api/preview?slug=${encodeURIComponent(slug)}`;
-      const pdf: PDFDocumentProxy = await getDocument(url).promise;
-
-      if (cancelled) return;
-      setPageCount(pdf.numPages);
-
-      const p: PDFPageProxy = await pdf.getPage(page);
-      const viewport = p.getViewport({ scale: 1.35 });
-
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext("2d")!;
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      await p.render({ canvasContext: ctx, viewport }).promise;
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, page]);
+export default async function ReaderPage({ params }: ReaderPageProps) {
+  const book = await getBookBySlug(params.slug)
+  if (!book) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-10">Book not found.</div>
+    )
+  }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          className="rounded border border-white/10 px-3 py-1 hover:bg-white/5"
-        >
-          Prev
-        </button>
-        <span className="text-sm text-slate-300">
-          Page {page}{pageCount ? ` / ${pageCount}` : ""}
-        </span>
-        <button
-          onClick={() => setPage((p) => (pageCount ? Math.min(pageCount, p + 1) : p + 1))}
-          className="rounded border border-white/10 px-3 py-1 hover:bg-white/5"
-        >
-          Next
-        </button>
-      </div>
-      <canvas ref={canvasRef} className="rounded-lg shadow-lg bg-black/10" />
-    </div>
-  );
+    <ReaderShell
+      slug={book.slug}
+      coverSrc={
+        book.coverPath
+          ? storagePublicUrl(book.coverPath)
+          : '/placeholder-cover.jpg'
+      }
+    />
+  )
 }

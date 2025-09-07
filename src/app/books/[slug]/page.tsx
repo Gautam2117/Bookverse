@@ -1,53 +1,44 @@
-// src/app/books/[slug]/page.tsx
-// @ts-nocheck
+import { Metadata } from 'next'
+import { getBookBySlug } from '@/lib/books.server'
+import { storagePublicUrl } from '@/utils/storage'
+import BookDetailShell from './BookDetailShell' // client component
 
-import Image from "next/image";
-import Link from "next/link";
-import { getBookBySlug, storagePublicUrl } from "@/lib/books";
+export const revalidate = 60
 
-export const revalidate = 60;
+type Props = { params: Promise<{ slug: string }> } // ← streamed params
 
-export default async function BookDetail({ params }) {
-  const slug = (await params)?.slug ?? params?.slug; // works whether it's a Promise or plain
-  const book = await getBookBySlug(slug);
-  if (!book) return <div className="mx-auto max-w-6xl px-4 py-10">Book not found.</div>;
+/** Dynamic SEO */
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params // ✅ await the streamed object
+  const book = await getBookBySlug(slug)
 
-  const cover = book.coverPath ? storagePublicUrl(book.coverPath) : "/placeholder-cover.jpg";
+  return {
+    title: book ? `${book.title} – Book | BookVerse` : 'Book | BookVerse',
+    description: book
+      ? `${book.description?.slice(0, 120)}…`
+      : 'Book details on BookVerse',
+  }
+}
 
-  return (
-    <div className="mx-auto max-w-6xl px-4 py-10 grid md:grid-cols-2 gap-10">
-      <div className="rounded-2xl overflow-hidden border border-white/10">
-        <Image src={cover} alt={book.title} width={900} height={1200} className="w-full h-auto"/>
-      </div>
-      <div>
-        <h1 className="text-3xl md:text-4xl font-bold">{book.title}</h1>
-        <p className="mt-1 text-slate-400">by {book.author}</p>
-        <div className="mt-4 flex gap-2">
-          {(book.tags ?? []).map((t) => (
-            <span key={t} className="text-[10px] uppercase tracking-wide rounded-full bg-violet-600/20 text-violet-300 px-2 py-0.5">{t}</span>
-          ))}
-        </div>
-        <p className="mt-5 text-slate-300 leading-relaxed">{book.description}</p>
-        <div className="mt-6 flex items-center gap-4">
-          <span className="text-2xl font-bold">{book.isPremium ? `₹${book.priceINR}` : "Free"}</span>
+export default async function BookDetailPage({ params }: Props) {
+  const { slug } = await params // ✅ await here too
+  const book = await getBookBySlug(slug)
 
-          {/* Free → read now; Premium → (placeholder) checkout route */}
-          <Link
-            href={book.isPremium ? `/checkout/${book.slug}` : `/reader/${book.slug}`}
-            className="rounded-xl bg-violet-600 px-5 py-2.5 font-semibold hover:bg-violet-500"
-          >
-            {book.isPremium ? "Buy now" : "Read now"}
-          </Link>
+  if (!book) {
+    return <div className="mx-auto max-w-6xl px-4 py-10">Book not found.</div>
+  }
 
-          {/* Always allow a preview */}
-          <Link
-            href={`/reader/${book.slug}`}
-            className="rounded-xl border border-white/10 px-5 py-2.5 hover:bg-white/5"
-          >
-            Preview
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
+  const uiBook = {
+    id: book.id,
+    slug: book.slug,
+    title: book.title,
+    author: book.author,
+    description: book.description,
+    cover: book.coverPath ? storagePublicUrl(book.coverPath) : '/placeholder-cover.jpg',
+    priceINR: book.priceINR,
+    isPremium: book.isPremium,
+    tags: book.tags ?? [],
+  }
+
+  return <BookDetailShell book={uiBook} />
 }

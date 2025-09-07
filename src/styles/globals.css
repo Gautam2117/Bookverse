@@ -5,3 +5,11 @@
 
 /* smooth fonts / bg */
 html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+ .animate-starfield {
+   animation: star-scroll 60s linear infinite;
+ }
+ @keyframes star-scroll {
+   from { background-position: 0 0; }
+   to   { background-position: 10000px 5000px; }
+ }

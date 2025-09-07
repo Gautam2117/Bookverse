@@ -1,9 +1,3 @@
-// Minimal stub so anything importing "canvas" doesn't crash on Vercel.
-module.exports = new Proxy({}, {
-  get() {
-    // Return a no-op function/ctor for any property access
-    return () => {
-      throw new Error("The native 'canvas' module is not available in this runtime.");
-    };
-  },
-});
+// An empty shim so any `require("canvas")` inside pdfjs-dist
+// turns into a harmless no-op on the server.
+module.exports = {};
