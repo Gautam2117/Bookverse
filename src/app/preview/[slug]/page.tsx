@@ -1,20 +1,18 @@
 // src/app/preview/[slug]/page.tsx
-import { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { getBookBySlug } from '@/lib/books.server'
 import { storagePublicUrl } from '@/utils/storage'
-import PreviewShell from './PreviewShell'           // ⬅ client component
+import PreviewShell from './PreviewShell' // client component
 
 export const revalidate = 60
 
-interface PreviewProps {
-  params: { slug: string }
-}
+type Props = { params: Promise<{ slug: string }> } // Next 15 streams params
 
 /** SEO */
-export async function generateMetadata(
-  { params }: PreviewProps,
-): Promise<Metadata> {
-  const book = await getBookBySlug(params.slug)
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const book = await getBookBySlug(slug)
+
   return {
     title: book ? `${book.title} – Preview | BookVerse` : 'Preview | BookVerse',
     description: book
@@ -23,8 +21,10 @@ export async function generateMetadata(
   }
 }
 
-export default async function PreviewPage({ params }: PreviewProps) {
-  const book = await getBookBySlug(params.slug)
+export default async function PreviewPage({ params }: Props) {
+  const { slug } = await params
+  const book = await getBookBySlug(slug)
+
   if (!book) {
     return <div className="mx-auto max-w-6xl px-4 py-10">Book not found.</div>
   }
